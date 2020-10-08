@@ -18,11 +18,17 @@ def connectionLoop(sock):
       if addr in clients:
          if 'heartbeat' in data:
             clients[addr]['lastBeat'] = datetime.now()
+            data = data.replace("'","")
+            data = data.replace("bheartbeat ","")
+            pos = data.split()
+            clients[addr]['position'] = {'x': float(pos[0]), 'y': float(pos[1]), 'z': float(pos[2])}
+            print("Check: ", pos)
       else:
          if 'connect' in data:
             clients[addr] = {}
             clients[addr]['lastBeat'] = datetime.now()
             clients[addr]['color'] = 0
+            clients[addr]['position'] = 0
 
             #--When there is a newly connected client, send a list of all the currently connected clients to the connected clients--#
             message = {"cmd": 0,"player":[]}
@@ -30,6 +36,10 @@ def connectionLoop(sock):
                #message["player"].append((c[0],c[1]))
                player = {}
                player['id'] = str(c)
+               if addr == c:
+                  player['identity'] = 1
+               else:
+                  player['identity'] = 0
                message['player'].append(player)
             #message = {"cmd": 0,"player":{"id":str(addr)}}
 
@@ -67,6 +77,7 @@ def gameLoop(sock):
          clients[c]['color'] = {"R": random.random(), "G": random.random(), "B": random.random()}
          player['id'] = str(c)
          player['color'] = clients[c]['color']
+         player['position'] = clients[c]['position']
          GameState['players'].append(player)
       s=json.dumps(GameState)
       print(s)
